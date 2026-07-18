@@ -1,0 +1,10 @@
+{
+  "name": "RaspiClaw",
+  "version": "3.0.5",
+  "description": "AI Agent 系统 — 基于 LangChain + LangGraph 的智能助手",
+  "author": "试验243林晨",
+  "license": "MIT",
+  "repository": "",
+  "created": "2026-06-16",
+  "updated": "2026-06-18"
+}

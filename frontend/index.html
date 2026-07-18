@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RaspiClaw - AI Agent 系统</title>
+  <link rel="stylesheet" href="assets/style.css?v=3.0.4">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🍓</span>
+          <span class="logo-text">RaspiClaw</span>
+        </div>
+        <button id="new-chat-btn" class="btn-icon" title="新对话">+</button>
+      </div>
+      <div class="conversation-list" id="conversation-list"></div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="chat"><span class="nav-icon">💬</span><span class="nav-label">对话</span></button>
+        <button class="nav-item" data-view="skills"><span class="nav-icon">⚡</span><span class="nav-label">技能</span></button>
+        <button class="nav-item" data-view="memory"><span class="nav-icon">🧠</span><span class="nav-label">记忆</span></button>
+        <button class="nav-item" data-view="tasks"><span class="nav-icon">⏰</span><span class="nav-label">任务</span></button>
+        <button class="nav-item" data-view="ssh"><span class="nav-icon">🖧</span><span class="nav-label">SSH</span></button>
+        <button class="nav-item" data-view="settings"><span class="nav-icon">⚙️</span><span class="nav-label">设置</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="btn-theme-toggle" class="btn-icon" title="切换主题">🌓</button>
+        <div class="status-indicator" id="connection-status">
+          <span class="status-dot disconnected"></span>
+          <span class="status-text">未连接</span>
+        </div>
+      </div>
+    </aside>
+
+    <main id="main-content">
+      <!-- 对话视图 -->
+      <div id="view-chat" class="view active">
+        <div class="chat-header">
+          <h2>RaspiClaw Agent</h2>
+          <div class="chat-header-actions">
+            <select id="provider-select" class="provider-select" title="切换模型商"><option value="">模型商</option></select>
+            <select id="tier-select" class="tier-select" title="切换模型等级"><option value="">等级</option></select>
+            <select id="permission-select" class="permission-select" title="权限模式">
+              <option value="full">完全权限</option>
+              <option value="ask" selected>询问权限</option>
+              <option value="safe">安全模式</option>
+            </select>
+            <button class="btn-icon" id="btn-clear" title="清除对话">🗑️</button>
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="welcome-message">
+            <div class="welcome-icon">🍓</div>
+            <h3>欢迎使用 RaspiClaw</h3>
+            <p>我是你的AI助手，具备以下能力：</p>
+            <div class="capability-cards">
+              <div class="cap-card">📊 <span>数据分析</span></div>
+              <div class="cap-card">📝 <span>文件管理</span></div>
+              <div class="cap-card">🧠 <span>记忆管理</span></div>
+              <div class="cap-card">💻 <span>代码执行</span></div>
+              <div class="cap-card">🌐 <span>联网搜索</span></div>
+              <div class="cap-card">🖥️ <span>终端操作</span></div>
+            </div>
+            <div class="quick-actions">
+              <button class="quick-btn" data-msg="帮我分析 summer.csv 数据">📊 数据分析</button>
+              <button class="quick-btn" data-msg="你有哪些技能？">⚡ 查看技能</button>
+              <button class="quick-btn" data-msg="搜索最新的AI新闻">🌐 联网搜索</button>
+              <button class="quick-btn" data-msg="查看我的记忆">🧠 查看记忆</button>
+            </div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <div class="attachments-preview" id="attachments-preview" style="display:none;"></div>
+          <div class="input-wrapper">
+            <button class="btn-attach" id="btn-attach" title="附加文件">📎</button>
+            <input type="file" id="file-input" multiple style="display:none;">
+            <button class="btn-workdir" id="btn-workdir-select" title="设置工作目录">📁</button>
+            <textarea id="chat-input" placeholder="输入消息... (Enter 发送, Shift+Enter 换行)" rows="1"></textarea>
+            <button id="btn-stop" class="btn-stop" title="停止生成" style="display:none;">⏹</button>
+            <button id="btn-send" class="btn-send" title="发送"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技能视图 -->
+      <div id="view-skills" class="view">
+        <div class="panel-header"><h2>⚡ 技能面板</h2></div>
+        <div class="panel-content"><div id="skills-list" class="cards-grid"></div></div>
+      </div>
+
+      <!-- 记忆视图 -->
+      <div id="view-memory" class="view">
+        <div class="panel-header"><h2>🧠 记忆管理</h2></div>
+        <div class="panel-content">
+          <div class="memory-tabs">
+            <button class="tab-btn active" data-tab="identity">身份</button>
+            <button class="tab-btn" data-tab="soul">性格</button>
+            <button class="tab-btn" data-tab="user">用户</button>
+            <button class="tab-btn" data-tab="memory">长期记忆</button>
+          </div>
+          <div class="memory-editor">
+            <textarea id="memory-editor" class="editor-textarea" spellcheck="false"></textarea>
+            <button class="btn-primary" id="btn-save-memory">💾 保存</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 任务视图 -->
+      <div id="view-tasks" class="view">
+        <div class="panel-header"><h2>⏰ 定时任务</h2></div>
+        <div class="panel-content"><div id="tasks-list" class="task-list"></div></div>
+      </div>
+
+      <!-- 设置视图 -->
+      <div id="view-settings" class="view">
+        <div class="panel-header"><h2>⚙️ 系统设置</h2></div>
+        <div class="panel-content">
+          <div class="settings-section">
+            <h3>模型 / Provider</h3>
+            <div class="setting-item"><label>当前模型</label><span id="setting-model">-</span></div>
+            <div class="setting-item"><label>权限模式</label><span id="setting-permission">-</span></div>
+          </div>
+          <div class="settings-section"><h3>工具列表</h3><div id="tools-list" class="tools-grid"></div></div>
+          <div class="settings-section">
+            <h3>工作目录</h3>
+            <div class="setting-item">
+              <input type="text" id="workdir-input" placeholder="设置工作目录路径...">
+              <button class="btn-secondary" id="btn-set-workdir">设置</button>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>Provider 管理</h3>
+            <div id="provider-list" class="provider-list"></div>
+            <button class="btn-primary" id="btn-add-provider" style="margin-top:12px;">+ 添加 Provider</button>
+          </div>
+          <div class="settings-section">
+            <h3>关于</h3>
+            <div id="about-info" class="about-box">
+              <div class="about-item"><span class="about-label">项目</span><span class="about-value" id="about-name">-</span></div>
+              <div class="about-item"><span class="about-label">版本</span><span class="about-value" id="about-version">-</span></div>
+              <div class="about-item"><span class="about-label">开发者</span><span class="about-value" id="about-author" style="color:var(--accent);font-weight:600;">-</span></div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>连接信息</h3>
+            <div class="setting-item"><label>API</label><span>http://127.0.0.1:8000</span></div>
+            <div class="setting-item"><label>WebSocket</label><span>ws://127.0.0.1:8000/ws/chat</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SSH 远程连接视图 -->
+      <div id="view-ssh" class="view">
+        <div class="panel-header"><h2>🖧 SSH 远程连接</h2><span id="ssh-status-badge" class="motor-status-badge">未连接</span></div>
+        <div class="panel-content">
+          <div class="ssh-dashboard">
+            <div class="ssh-connect-card">
+              <h3>连接设置</h3>
+              <div class="ssh-form">
+                <div class="form-group"><label>主机地址 (IP)</label><input type="text" id="ssh-hostname" placeholder="如 10.165.223.112"></div>
+                <div class="form-group"><label>用户名</label><input type="text" id="ssh-username" placeholder="如 pi" value="pi"></div>
+                <div class="form-group"><label>密码</label><input type="password" id="ssh-password" placeholder="输入密码"></div>
+                <div class="form-group"><label>端口</label><input type="number" id="ssh-port" value="22" min="1" max="65535"></div>
+                <div class="ssh-buttons">
+                  <button class="btn-primary" id="btn-ssh-connect">连接</button>
+                  <button class="btn-danger" id="btn-ssh-disconnect" disabled>断开</button>
+                </div>
+              </div>
+            </div>
+            <div class="ssh-terminal-card">
+              <h3>远程终端</h3>
+              <div class="ssh-terminal" id="ssh-terminal"><div class="ssh-welcome">输入连接信息后点击"连接"开始会话。确保本机与树莓派在同一网段。</div></div>
+              <div class="ssh-input-row">
+                <input type="text" id="ssh-command-input" placeholder="输入命令... (Enter 执行)" disabled>
+                <button class="btn-primary btn-sm" id="btn-ssh-exec" disabled>执行</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Provider Modal -->
+      <div class="modal-overlay" id="provider-modal" style="display:none;">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 id="provider-modal-title">添加 Provider</h3>
+            <button class="btn-icon" id="btn-close-provider-modal">✕</button>
+          </div>
+          <div class="modal-body">
+            <input type="hidden" id="provider-edit-id">
+            <div class="form-group"><label>名称</label><input type="text" id="provider-name" placeholder="如 DeepSeek, Zhipu GLM"></div>
+            <div class="form-group"><label>API Key</label><input type="password" id="provider-apikey" placeholder="sk-xxx..."></div>
+            <div class="form-group"><label>Base URL</label><input type="text" id="provider-baseurl" placeholder="https://api.deepseek.com"></div>
+            <div class="form-group"><label>API 格式</label>
+              <select id="provider-format"><option value="openai">OpenAI 兼容</option><option value="anthropic">Anthropic 兼容</option></select>
+            </div>
+            <div class="form-group"><label>运行时类型</label>
+              <select id="provider-runtime"><option value="deepseek">DeepSeek</option><option value="qwen">Qwen / 通义</option><option value="openai_compatible">OpenAI 兼容</option></select>
+            </div>
+            <div class="form-group"><label>Opus (旗舰)</label><input type="text" id="provider-opus-model" placeholder="最强模型"></div>
+            <div class="form-group"><label>Sonnet (均衡)</label><input type="text" id="provider-sonnet-model" placeholder="均衡模型"></div>
+            <div class="form-group"><label>Haiku (快速)</label><input type="text" id="provider-haiku-model" placeholder="快速模型"></div>
+            <div class="form-group"><label>默认等级</label>
+              <select id="provider-default-tier"><option value="opus">Opus (最强)</option><option value="sonnet" selected>Sonnet (均衡)</option><option value="haiku">Haiku (快速)</option></select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" id="btn-cancel-provider">取消</button>
+            <button class="btn-primary" id="btn-save-provider">保存</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/app.js?v=3.0.4"></script>
+</body>
+</html>
